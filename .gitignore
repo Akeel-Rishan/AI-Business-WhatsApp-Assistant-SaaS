@@ -11,6 +11,8 @@ frontend/tsconfig.tsbuildinfo
 __pycache__/
 *.py[cod]
 backend/.venv/
+backend/.conda/
+.venv/
 
 # Environment files
 .env

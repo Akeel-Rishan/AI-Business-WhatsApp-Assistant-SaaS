@@ -3,6 +3,11 @@ from fastapi import APIRouter, Query
 router = APIRouter()
 
 
+@router.get("")
+async def webhook_placeholder() -> dict[str, str]:
+    return {"message": "coming soon"}
+
+
 @router.get("/whatsapp")
 async def verify_whatsapp_webhook(
     hub_mode: str | None = Query(default=None, alias="hub.mode"),

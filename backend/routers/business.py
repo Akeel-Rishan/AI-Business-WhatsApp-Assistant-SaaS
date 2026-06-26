@@ -10,6 +10,11 @@ from services.supabase import get_current_user_id, get_supabase
 router = APIRouter()
 
 
+@router.get("")
+async def business_placeholder() -> dict[str, str]:
+    return {"message": "coming soon"}
+
+
 @router.get("/profile", response_model=BusinessProfile)
 async def get_profile(user_id: str = Depends(get_current_user_id)) -> dict:
     supabase = get_supabase()

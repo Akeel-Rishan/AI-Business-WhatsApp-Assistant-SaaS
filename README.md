@@ -1,23 +1,40 @@
 # WA Assistant
 
-AI Business WhatsApp Assistant is a SaaS starter for businesses that want to manage WhatsApp conversations, customer profiles, FAQs, leads, and AI reply settings from a protected dashboard.
+WA Assistant is a production-ready monorepo scaffold for an AI Business WhatsApp Assistant SaaS platform. It provides a polished Next.js dashboard shell, a FastAPI backend, Supabase integration points, and the structure needed for future WhatsApp, knowledge base, lead, and AI automation features.
 
-## Stack
+## Tech Stack
 
-- Frontend: Next.js 14 App Router, TypeScript, Tailwind CSS, shadcn/ui-style components, Supabase Auth
-- Backend: FastAPI, Pydantic, supabase-py, python-dotenv
-- Database: Supabase Postgres with Row Level Security
+| Area | Technology |
+| --- | --- |
+| Frontend | Next.js 14, App Router, TypeScript, Tailwind CSS, shadcn/ui-style components |
+| UI | Radix UI primitives, lucide-react, class-variance-authority, clsx, tailwind-merge |
+| Auth/Data | Supabase JS, Supabase SSR |
+| Backend | FastAPI, Uvicorn, Pydantic, python-dotenv |
+| Integrations | Supabase, WhatsApp Cloud API scaffold, Gemini scaffold |
 
-## Local Setup
+## Project Structure
 
-### 1. Supabase
+```text
+wa-assistant/
+  frontend/
+    src/
+      app/
+      components/
+      hooks/
+      lib/
+      types/
+  backend/
+    routers/
+    services/
+    models/
+    utils/
+  supabase/
+    migrations/
+```
 
-1. Create a Supabase project.
-2. Open the SQL editor and run `supabase/migrations/001_initial_schema.sql`.
-3. Copy your project URL, anon key, and service role key.
-4. In Authentication settings, add `http://localhost:3000` to allowed redirect URLs.
+## Local Development
 
-### 2. Frontend
+### Frontend
 
 ```powershell
 cd frontend
@@ -26,13 +43,9 @@ npm install
 npm run dev
 ```
 
-Set these values in `frontend/.env.local`:
+The frontend runs on `http://localhost:3000`.
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL.
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anon public key.
-- `NEXT_PUBLIC_BACKEND_URL`: FastAPI base URL, usually `http://localhost:8000`.
-
-### 3. Backend
+### Backend
 
 Recommended with Anaconda:
 
@@ -50,39 +63,42 @@ If PowerShell still uses `C:\Python314\python.exe` after `conda activate`, run t
 & "D:\anaconda3\envs\wa-assistant-backend\python.exe" -m uvicorn main:app --reload --port 8000
 ```
 
-Alternative with a standalone Python 3.11 or 3.12 installation:
+The backend runs on `http://localhost:8000`.
 
-```powershell
-cd backend
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-python -m uvicorn main:app --reload --port 8000
+## Environment Variables
+
+### Frontend
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
-Do not create the backend environment with Python 3.14. Some dependencies, including `pydantic-core`, may try to compile native Rust extensions and fail instead of installing prebuilt wheels.
+### Backend
 
-Set these values in `backend/.env`:
-
-- `SUPABASE_URL`: Supabase project URL.
-- `SUPABASE_SECRET_KEY`: Supabase secret key (`sb_secret_...`) for trusted backend operations. In the Supabase Dashboard, copy this from Settings > API Keys > Secret keys. Legacy projects may show this as the `service_role` key instead.
-- `GEMINI_API_KEY`: Reserved for future Gemini-powered replies.
-- `FRONTEND_URL`: Frontend origin, usually `http://localhost:3000`.
-
-## Auth Flow
-
-- Register creates a Supabase user and redirects signed-in users to onboarding.
-- Login checks whether a business profile exists.
-- Users with a profile go to `/dashboard`; users without one go to `/onboarding`.
-- `/dashboard` and `/onboarding` are protected by middleware.
-- The onboarding form saves the authenticated user's business profile to Supabase.
-
-## Project Structure
-
-```text
-wa-assistant/
-  frontend/      Next.js application
-  backend/       FastAPI application
-  supabase/      SQL migrations
+```env
+SUPABASE_URL=
+SUPABASE_SECRET_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+GEMINI_API_KEY=
+FRONTEND_URL=http://localhost:3000
+PORT=8000
 ```
+
+Use `SUPABASE_SECRET_KEY` for current Supabase projects. Legacy projects may expose the same backend-level permission as `service_role`; the backend accepts `SUPABASE_SERVICE_ROLE_KEY` as a fallback.
+
+## Supabase Setup
+
+Create a Supabase project and copy the project URL, anon key, and secret key into the environment files. Database migrations will be added in Part 2, so `supabase/migrations/` is intentionally empty in this scaffold phase.
+
+## Phase Roadmap
+
+| Phase | Scope |
+| --- | --- |
+| Phase 1 | Monorepo scaffold, dashboard shell, frontend/backend structure |
+| Phase 2 | Supabase schema, RLS policies, generated DB types |
+| Phase 3 | Supabase auth, onboarding, business profile persistence |
+| Phase 4 | WhatsApp webhook ingestion and message storage |
+| Phase 5 | Knowledge base, FAQs, AI response generation |
+| Phase 6 | Leads, analytics, production hardening, deployment |

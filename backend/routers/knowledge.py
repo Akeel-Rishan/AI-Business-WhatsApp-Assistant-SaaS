@@ -4,5 +4,5 @@ router = APIRouter()
 
 
 @router.get("")
-async def auth_placeholder() -> dict[str, str]:
+async def knowledge_placeholder() -> dict[str, str]:
     return {"message": "coming soon"}
