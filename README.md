@@ -90,7 +90,7 @@ Use `SUPABASE_SECRET_KEY` for current Supabase projects. Legacy projects may exp
 
 ## Supabase Setup
 
-Create a Supabase project and copy the project URL, anon key, and secret key into the environment files. Database migrations will be added in Part 2, so `supabase/migrations/` is intentionally empty in this scaffold phase.
+Create a Supabase project and copy the project URL, anon key, and secret key into the environment files. Run `supabase/migrations/001_initial_schema.sql` in the Supabase SQL editor to create the application tables, indexes, triggers, and RLS policies.
 
 ## Phase Roadmap
 
