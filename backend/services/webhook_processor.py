@@ -1,43 +1,47 @@
-import logging
 import time
 
-from services.business_lookup import get_business_by_phone_id
-from services.customer_service import upsert_customer
-from services.message_service import store_inbound_message
+from services.pipeline.dead_letter import send_to_dead_letter
+from services.pipeline.orchestrator import MessagePipeline, PipelineStage
 from services.supabase import get_supabase
 from services.webhook_logger import log_webhook_event
 from services.webhook_parser import ParsedMessage, ParsedStatusUpdate, parse_webhook_payload
+from utils.logger import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
+DEAD_LETTER_STAGES = {
+    PipelineStage.BUSINESS_LOOKUP.value,
+    PipelineStage.CUSTOMER_UPSERT.value,
+    PipelineStage.CONVERSATION_MANAGEMENT.value,
+    PipelineStage.MESSAGE_STORAGE.value,
+}
 
 
-async def process_webhook_message(parsed_message: ParsedMessage, supabase_client) -> None:
-    business = await get_business_by_phone_id(parsed_message.phone_number_id, supabase_client)
-    if not business:
-        return
-
-    customer = await upsert_customer(
-        business_id=str(business["id"]),
-        whatsapp_number=parsed_message.from_number,
-        name=parsed_message.customer_name or None,
-        supabase_client=supabase_client,
-    )
-    stored_message = await store_inbound_message(
-        business_id=str(business["id"]),
-        customer_id=str(customer["id"]),
-        wa_message_id=parsed_message.wa_message_id,
-        content=parsed_message.text_content,
-        message_type=parsed_message.message_type,
-        supabase_client=supabase_client,
-    )
-    logger.info(
-        "Message stored: %s for business %s",
-        stored_message.get("wa_message_id"),
-        business.get("name"),
-    )
-    # TODO: Phase 4 - trigger AI response here.
-    logger.info("AI response placeholder for %s", parsed_message.wa_message_id)
+async def process_webhook_message(
+    parsed_message: ParsedMessage,
+    raw_payload: dict,
+    supabase_client,
+) -> None:
+    pipeline = MessagePipeline(supabase_client, raw_payload=raw_payload)
+    try:
+        ctx = await pipeline.run(parsed_message)
+        if ctx.stages_failed and DEAD_LETTER_STAGES.intersection(ctx.stages_failed):
+            await send_to_dead_letter(
+                parsed_message=parsed_message,
+                raw_payload=raw_payload,
+                failure_stage=ctx.stages_failed[0],
+                error_message=str(ctx.errors),
+                supabase_client=supabase_client,
+            )
+    except Exception as exc:
+        logger.exception("Pipeline crashed: %s", exc)
+        await send_to_dead_letter(
+            parsed_message=parsed_message,
+            raw_payload=raw_payload,
+            failure_stage="orchestrator",
+            error_message=str(exc),
+            supabase_client=supabase_client,
+        )
 
 
 async def process_status_update(status_update: ParsedStatusUpdate, supabase_client) -> None:
@@ -69,7 +73,7 @@ async def process_webhook_payload(payload: dict) -> None:
             event_type = "status"
 
         for message in messages:
-            await process_webhook_message(message, supabase_client)
+            await process_webhook_message(message, payload, supabase_client)
         for status_update in statuses:
             await process_status_update(status_update, supabase_client)
 

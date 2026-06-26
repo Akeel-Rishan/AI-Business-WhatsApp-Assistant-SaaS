@@ -1,9 +1,9 @@
-import logging
 import time
 from typing import Any
 
+from utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 CACHE_DURATION = 300
 _business_cache: dict[str, dict[str, Any]] = {}

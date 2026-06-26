@@ -39,8 +39,10 @@ ALLOWED_TABLES = {
     "businesses",
     "conversations",
     "customers",
+    "dead_letter_messages",
     "faqs",
     "knowledge_base_items",
+    "leads",
     "messages",
     "webhook_logs",
 }

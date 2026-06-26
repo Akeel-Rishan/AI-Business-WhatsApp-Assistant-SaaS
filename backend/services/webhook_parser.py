@@ -1,9 +1,9 @@
-import logging
 from dataclasses import dataclass
 from typing import Any
 
+from utils.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 @dataclass

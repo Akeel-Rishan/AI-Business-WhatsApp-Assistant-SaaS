@@ -1,12 +1,15 @@
 import os
+import asyncio
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from routers import auth, business, health, knowledge, leads, messages, webhook
+from services.pipeline.dead_letter import dead_letter_retry_worker
 
-load_dotenv()
+BACKEND_DIR = Path(__file__).resolve().parent
+load_dotenv(BACKEND_DIR / ".env")
 
 def _load_non_empty_env(path: Path) -> None:
     if not path.exists():
@@ -20,7 +23,7 @@ def _load_non_empty_env(path: Path) -> None:
             os.environ[key.strip()] = value.strip().strip('"').strip("'")
 
 
-_load_non_empty_env(Path(".env"))
+_load_non_empty_env(BACKEND_DIR / ".env")
 
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 allowed_origins = [origin.strip() for origin in f"http://localhost:3000,{frontend_url}".split(",") if origin.strip()]
@@ -43,6 +46,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup_event() -> None:
     print("WA Assistant API is running")
+    asyncio.create_task(dead_letter_retry_worker())
 
 
 app.include_router(health.router, prefix="/health", tags=["health"])

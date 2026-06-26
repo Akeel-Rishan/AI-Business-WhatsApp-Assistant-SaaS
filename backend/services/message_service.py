@@ -1,9 +1,9 @@
 from datetime import datetime, timezone
-import logging
 
+from utils.logger import get_logger
 
 SUPPORTED_MESSAGE_TYPES = {"text", "image", "audio", "document", "video", "reaction", "button", "interactive", "unknown"}
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def _utc_now() -> str:

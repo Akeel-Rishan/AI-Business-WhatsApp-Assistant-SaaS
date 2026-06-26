@@ -44,7 +44,8 @@ def main() -> None:
                     'business_instructions',
                     'leads',
                     'ai_settings',
-                    'webhook_logs'
+                    'webhook_logs',
+                    'dead_letter_messages'
                   )
                 order by table_name;
                 """
@@ -62,6 +63,7 @@ def main() -> None:
         "leads",
         "ai_settings",
         "webhook_logs",
+        "dead_letter_messages",
     }
     missing = sorted(expected - set(tables))
     if missing:

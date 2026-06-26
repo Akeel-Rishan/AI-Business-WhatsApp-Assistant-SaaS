@@ -20,6 +20,7 @@ EXPECTED_TABLES = [
 ]
 
 EXPECTED_BACKEND_TABLES = [
+    "dead_letter_messages",
     "webhook_logs",
 ]
 

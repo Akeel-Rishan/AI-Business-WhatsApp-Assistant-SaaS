@@ -1,18 +1,19 @@
 import hashlib
 import hmac
-import logging
 import os
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Request, status
 from fastapi.responses import PlainTextResponse
 
+from services.pipeline.pipeline_monitor import get_pipeline_stats
 from services.supabase import get_supabase
 from services.webhook_logger import get_webhook_health, log_webhook_event
 from services.webhook_processor import process_webhook_payload
+from utils.logger import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 router = APIRouter()
 STARTED_AT = datetime.now(timezone.utc)
 
@@ -109,3 +110,8 @@ async def receive_webhook(
 @router.get("/health")
 async def webhook_health(request: Request) -> dict:
     return await get_webhook_health(_webhook_url(request), STARTED_AT)
+
+
+@router.get("/pipeline-stats")
+async def pipeline_stats() -> dict:
+    return get_pipeline_stats()

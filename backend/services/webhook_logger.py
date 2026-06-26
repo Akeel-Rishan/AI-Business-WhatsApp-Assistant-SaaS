@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta, timezone
-import logging
 
 import psycopg
 from psycopg.rows import dict_row
 
 from services.supabase import _database_url
+from utils.logger import get_logger
 
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 async def log_webhook_event(
