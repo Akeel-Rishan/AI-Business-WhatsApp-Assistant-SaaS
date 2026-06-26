@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BookOpen,
+  ChevronDown,
   LayoutDashboard,
   LogOut,
   MessageSquare,
@@ -23,9 +25,14 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/inbox", label: "Inbox", icon: MessageSquare },
   { href: "/customers", label: "Customers", icon: Users },
-  { href: "/knowledge-base", label: "Knowledge Base", icon: BookOpen },
   { href: "/leads", label: "Leads", icon: Target },
   { href: "/settings", label: "Settings", icon: Settings }
+];
+
+const knowledgeSubItems = [
+  { href: "/knowledge-base/faqs", label: "FAQs" },
+  { href: "/knowledge-base/items", label: "Products & Services" },
+  { href: "/knowledge-base/instructions", label: "AI Instructions" }
 ];
 
 type SidebarProps = {
@@ -36,8 +43,15 @@ type SidebarProps = {
 export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [knowledgeOpen, setKnowledgeOpen] = useState(pathname.startsWith("/knowledge-base"));
   const displayEmail = userEmail ?? "Signed in";
   const initials = userEmail?.slice(0, 2).toUpperCase() ?? "WA";
+
+  useEffect(() => {
+    if (pathname.startsWith("/knowledge-base")) {
+      setKnowledgeOpen(true);
+    }
+  }, [pathname]);
 
   async function handleLogout() {
     const supabase = createClient();
@@ -53,7 +67,59 @@ export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
       </div>
       <Separator className="bg-sidebar-border" />
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {navItems.slice(0, 3).map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={onNavigate}
+              className={cn(
+                "flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
+                isActive && "border-brand bg-[#161616] text-white"
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+        <div>
+          <button
+            type="button"
+            onClick={() => setKnowledgeOpen((current) => !current)}
+            className={cn(
+              "flex h-10 w-full items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-left text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
+              pathname.startsWith("/knowledge-base") && "border-brand bg-[#161616] text-white"
+            )}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span className="flex-1">Knowledge Base</span>
+            <ChevronDown className={cn("h-4 w-4 transition-transform", knowledgeOpen && "rotate-180")} />
+          </button>
+          {knowledgeOpen ? (
+            <div className="ml-5 mt-1 space-y-1 border-l border-sidebar-border pl-3">
+              {knowledgeSubItems.map((item) => {
+                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={onNavigate}
+                    className={cn(
+                      "flex h-8 items-center gap-2 rounded-md px-2 text-xs text-muted-foreground transition-colors hover:text-white",
+                      isActive && "text-brand"
+                    )}
+                  >
+                    <span className={cn("h-1.5 w-1.5 rounded-full bg-muted-foreground/40", isActive && "bg-brand")} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : null}
+        </div>
+        {navItems.slice(3).map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link

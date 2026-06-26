@@ -66,6 +66,19 @@ export interface FAQ {
   updated_at: string;
 }
 
+export interface FAQCreate {
+  business_id: string;
+  question: string;
+  answer: string;
+  is_active?: boolean;
+}
+
+export interface FAQUpdate {
+  question?: string;
+  answer?: string;
+  is_active?: boolean;
+}
+
 export interface KnowledgeBaseItem {
   id: string;
   business_id: string;

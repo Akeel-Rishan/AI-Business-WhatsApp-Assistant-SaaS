@@ -19,6 +19,9 @@ const titles: Record<string, string> = {
   "/inbox": "Inbox",
   "/customers": "Customers",
   "/knowledge-base": "Knowledge Base",
+  "/knowledge-base/faqs": "FAQs",
+  "/knowledge-base/items": "Products & Services",
+  "/knowledge-base/instructions": "AI Instructions",
   "/leads": "Leads",
   "/settings": "Settings"
 };

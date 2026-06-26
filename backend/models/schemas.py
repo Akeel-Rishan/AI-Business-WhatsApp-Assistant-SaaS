@@ -51,21 +51,26 @@ class BusinessResponse(BusinessProfile):
 
 
 class FAQCreate(BaseModel):
-    question: str = Field(min_length=1)
-    answer: str = Field(min_length=1)
+    business_id: str
+    question: str = Field(min_length=1, max_length=300)
+    answer: str = Field(min_length=1, max_length=1000)
     is_active: bool = True
 
 
 class FAQUpdate(BaseModel):
-    question: str | None = Field(default=None, min_length=1)
-    answer: str | None = Field(default=None, min_length=1)
+    question: str | None = Field(default=None, min_length=1, max_length=300)
+    answer: str | None = Field(default=None, min_length=1, max_length=1000)
     is_active: bool | None = None
 
 
-class FAQResponse(FAQCreate):
+class FAQResponse(BaseModel):
     id: str
     business_id: str
+    question: str
+    answer: str
+    is_active: bool
     created_at: str
+    updated_at: str
 
 
 class KnowledgeBaseItemCreate(BaseModel):
