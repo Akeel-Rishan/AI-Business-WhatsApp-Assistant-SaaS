@@ -34,6 +34,9 @@ def main() -> None:
                     from public.businesses
                     where businesses.user_id = users.id
                   ) as has_business,
+                  users.email_confirmed_at is null as email_confirmed_at_null,
+                  users.confirmed_at is null as confirmed_at_null,
+                  users.confirmation_sent_at is null as confirmation_sent_at_null,
                   users.created_at
                 from auth.users
                 order by users.created_at desc
@@ -43,9 +46,21 @@ def main() -> None:
             rows = cursor.fetchall()
 
     print(f"AUTH_USERS={len(rows)}")
-    for _user_id, email, confirmed, has_business, created_at in rows:
+    for (
+        _user_id,
+        email,
+        confirmed,
+        has_business,
+        email_confirmed_at_null,
+        confirmed_at_null,
+        confirmation_sent_at_null,
+        created_at,
+    ) in rows:
         print(
-            f"{mask_email(email)}|confirmed={confirmed}|has_business={has_business}|created={created_at}"
+            f"{mask_email(email)}|confirmed={confirmed}|has_business={has_business}|"
+            f"email_confirmed_at_null={email_confirmed_at_null}|"
+            f"confirmed_at_null={confirmed_at_null}|"
+            f"confirmation_sent_at_null={confirmation_sent_at_null}|created={created_at}"
         )
 
 
