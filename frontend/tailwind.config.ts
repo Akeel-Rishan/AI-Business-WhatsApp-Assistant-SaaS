@@ -3,9 +3,10 @@ import type { Config } from "tailwindcss";
 const config: Config = {
   darkMode: ["class"],
   content: [
-    "./app/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./lib/**/*.{ts,tsx}"
+    "./src/app/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+    "./src/lib/**/*.{ts,tsx}",
+    "./src/hooks/**/*.{ts,tsx}"
   ],
   theme: {
     extend: {
@@ -42,7 +43,11 @@ const config: Config = {
         card: {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))"
-        }
+        },
+        brand: "#25D366",
+        "brand-dark": "#128C7E",
+        sidebar: "#0f0f0f",
+        "sidebar-border": "#1f1f1f"
       },
       borderRadius: {
         lg: "var(--radius)",
