@@ -140,6 +140,32 @@ export interface BusinessInstructions {
   updated_at: string;
 }
 
+export interface KnowledgeOverview {
+  totalFaqs: number;
+  activeFaqs: number;
+  inactiveFaqs: number;
+  totalItems: number;
+  itemsByCategory: Record<string, number>;
+  instructionsFilledCount: number;
+  hasAssistantName: boolean;
+  hasPersonality: boolean;
+  hasGreeting: boolean;
+  hasEscalationMessage: boolean;
+  hasName: boolean;
+  hasDescription: boolean;
+  hasHours: boolean;
+  hasContact: boolean;
+  hasLocation: boolean;
+  hasWhatsapp: boolean;
+  readinessScore: number;
+  recentFaqs: FAQ[];
+  recentItems: KnowledgeBaseItem[];
+  warnings: string[];
+  faqs: FAQ[];
+  items: KnowledgeBaseItem[];
+  instructions: BusinessInstructions;
+}
+
 export interface Lead {
   id: string;
   business_id: string;

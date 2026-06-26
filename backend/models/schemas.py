@@ -145,6 +145,32 @@ class InstructionsResponse(BaseModel):
     updated_at: str
 
 
+class KnowledgeOverviewResponse(BaseModel):
+    total_faqs: int
+    active_faqs: int
+    inactive_faqs: int
+    total_items: int
+    items_by_category: dict[str, int]
+    instructions_filled_count: int
+    has_assistant_name: bool
+    has_personality: bool
+    has_greeting: bool
+    has_escalation_message: bool
+    has_name: bool
+    has_description: bool
+    has_hours: bool
+    has_contact: bool
+    has_location: bool
+    has_whatsapp: bool
+    readiness_score: int
+    recent_faqs: list[FAQResponse]
+    recent_items: list[KnowledgeBaseItemResponse]
+    warnings: list[str]
+    faqs: list[FAQResponse]
+    items: list[KnowledgeBaseItemResponse]
+    instructions: InstructionsResponse
+
+
 class MessageResponse(BaseModel):
     id: str
     conversation_id: str

@@ -7,6 +7,7 @@ from models.schemas import (
     KnowledgeBaseItemCreate,
     KnowledgeBaseItemResponse,
     KnowledgeBaseItemUpdate,
+    KnowledgeOverviewResponse,
     InstructionsResponse,
     InstructionsUpdate,
 )
@@ -156,6 +157,66 @@ def _validate_item_category(category: str | None) -> None:
         )
 
 
+def _is_filled(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, list):
+        return any(_is_filled(item) for item in value)
+    return bool(value)
+
+
+def _instruction_filled_count(instructions: dict) -> int:
+    checks = [
+        _is_filled(instructions.get("assistant_name")),
+        _is_filled(instructions.get("personality_description")),
+        _is_filled(instructions.get("conversation_opener")),
+        _is_filled(instructions.get("always_do_rules")),
+        _is_filled(instructions.get("never_do_rules")),
+        _is_filled(instructions.get("restricted_topics")) or _is_filled(instructions.get("redirect_message")),
+        _is_filled(instructions.get("escalation_message")) or _is_filled(instructions.get("escalation_situations")),
+        _is_filled(instructions.get("conversation_closer")) or _is_filled(instructions.get("after_hours_message")),
+    ]
+    return sum(1 for check in checks if check)
+
+
+def _calculate_readiness_score(
+    business: dict,
+    active_faqs: int,
+    total_items: int,
+    items_by_category: dict[str, int],
+    instructions: dict,
+) -> int:
+    score = 0
+
+    score += 4 if _is_filled(business.get("name")) else 0
+    score += 4 if _is_filled(business.get("description")) else 0
+    score += 4 if _is_filled(business.get("opening_hours")) else 0
+    score += 4 if _is_filled(business.get("contact_info")) else 0
+    score += 4 if _is_filled(business.get("location")) else 0
+
+    score += 10 if active_faqs >= 1 else 0
+    score += 10 if active_faqs >= 5 else 0
+    score += 5 if active_faqs >= 10 else 0
+
+    score += 5 if total_items >= 1 else 0
+    score += 5 if items_by_category.get("product", 0) + items_by_category.get("service", 0) > 0 else 0
+    score += 5 if items_by_category.get("pricing", 0) > 0 else 0
+    score += 5 if items_by_category.get("policy", 0) > 0 else 0
+    score += 5 if items_by_category.get("delivery", 0) > 0 else 0
+
+    score += 4 if _is_filled(instructions.get("assistant_name")) else 0
+    score += 4 if _is_filled(instructions.get("personality_description")) else 0
+    score += 4 if _is_filled(instructions.get("conversation_opener")) else 0
+    score += 4 if _is_filled(instructions.get("always_do_rules")) and _is_filled(instructions.get("never_do_rules")) else 0
+    score += 4 if _is_filled(instructions.get("escalation_message")) else 0
+
+    score += 10 if _is_filled(business.get("whatsapp_phone_id")) else 0
+
+    return max(0, min(100, score))
+
+
 def _get_owned_item(item_id: str, user_id: str) -> dict:
     supabase = get_supabase()
 
@@ -181,6 +242,111 @@ def _get_owned_item(item_id: str, user_id: str) -> dict:
 @router.get("")
 async def knowledge_placeholder() -> dict[str, str]:
     return {"message": "coming soon"}
+
+
+@router.get("/overview", response_model=KnowledgeOverviewResponse)
+async def get_knowledge_overview(
+    business_id: str = Query(...),
+    user_id: str = Depends(get_current_user_id),
+) -> dict:
+    supabase = get_supabase()
+
+    try:
+        business_response = (
+            supabase.table("businesses")
+            .select("id,user_id,name,description,opening_hours,contact_info,location,whatsapp_number,whatsapp_phone_id")
+            .eq("id", business_id)
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    business = _first_row(business_response)
+    if not business:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Business profile not found.",
+        )
+
+    try:
+        faqs_response = (
+            supabase.table("faqs")
+            .select("id,business_id,question,answer,is_active,created_at,updated_at")
+            .eq("business_id", business_id)
+            .order("updated_at", desc=True)
+            .execute()
+        )
+        items_response = (
+            supabase.table("knowledge_base_items")
+            .select("id,business_id,category,title,content,tags,is_active,created_at,updated_at")
+            .eq("business_id", business_id)
+            .order("updated_at", desc=True)
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    faqs = faqs_response.data or []
+    items = [_normalize_item(item) for item in (items_response.data or [])]
+    instructions = _normalize_instructions(_get_or_create_instructions(business_id), _get_ai_settings(business_id))
+
+    total_faqs = len(faqs)
+    active_faqs = sum(1 for faq in faqs if faq.get("is_active"))
+    inactive_faqs = total_faqs - active_faqs
+
+    items_by_category = {category: 0 for category in sorted(ITEM_CATEGORIES)}
+    for item in items:
+        category = str(item.get("category") or "general")
+        items_by_category[category] = items_by_category.get(category, 0) + 1
+
+    total_items = len(items)
+    readiness_score = _calculate_readiness_score(
+        business=business,
+        active_faqs=active_faqs,
+        total_items=total_items,
+        items_by_category=items_by_category,
+        instructions=instructions,
+    )
+
+    warnings: list[str] = []
+    if total_faqs == 0:
+        warnings.append("no_faqs")
+    if items_by_category.get("pricing", 0) == 0:
+        warnings.append("no_pricing")
+    if items_by_category.get("delivery", 0) == 0:
+        warnings.append("no_delivery")
+    if items_by_category.get("policy", 0) == 0:
+        warnings.append("no_policy")
+    if not _is_filled(instructions.get("personality_description")):
+        warnings.append("no_instructions")
+
+    return {
+        "total_faqs": total_faqs,
+        "active_faqs": active_faqs,
+        "inactive_faqs": inactive_faqs,
+        "total_items": total_items,
+        "items_by_category": items_by_category,
+        "instructions_filled_count": _instruction_filled_count(instructions),
+        "has_assistant_name": _is_filled(instructions.get("assistant_name")),
+        "has_personality": _is_filled(instructions.get("personality_description")),
+        "has_greeting": _is_filled(instructions.get("conversation_opener")),
+        "has_escalation_message": _is_filled(instructions.get("escalation_message")),
+        "has_name": _is_filled(business.get("name")),
+        "has_description": _is_filled(business.get("description")),
+        "has_hours": _is_filled(business.get("opening_hours")),
+        "has_contact": _is_filled(business.get("contact_info")),
+        "has_location": _is_filled(business.get("location")),
+        "has_whatsapp": _is_filled(business.get("whatsapp_phone_id")),
+        "readiness_score": readiness_score,
+        "recent_faqs": faqs[:5],
+        "recent_items": items[:5],
+        "warnings": warnings,
+        "faqs": faqs,
+        "items": items,
+        "instructions": instructions,
+    }
 
 
 @router.get("/faqs", response_model=list[FAQResponse])
