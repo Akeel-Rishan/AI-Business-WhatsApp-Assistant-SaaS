@@ -102,6 +102,49 @@ class KnowledgeBaseItemResponse(BaseModel):
     updated_at: str
 
 
+class InstructionsUpdate(BaseModel):
+    assistant_name: str | None = Field(default=None, max_length=30)
+    personality_description: str | None = Field(default=None, max_length=500)
+    conversation_opener: str | None = Field(default=None, max_length=300)
+    always_do_rules: list[str] | None = Field(default=None, max_length=10)
+    never_do_rules: list[str] | None = Field(default=None, max_length=10)
+    restricted_topics: list[str] | None = Field(default=None, max_length=10)
+    redirect_message: str | None = Field(default=None, max_length=300)
+    escalation_keyword: str | None = None
+    escalation_situations: list[str] | None = Field(default=None, max_length=8)
+    escalation_message: str | None = Field(default=None, max_length=300)
+    max_response_length: int | None = Field(default=None, ge=50, le=500)
+    use_emojis: bool | None = None
+    use_bullet_points: bool | None = None
+    conversation_closer: str | None = Field(default=None, max_length=300)
+    after_hours_message: str | None = Field(default=None, max_length=300)
+    response_language: str | None = None
+
+
+class InstructionsResponse(BaseModel):
+    id: str
+    business_id: str
+    assistant_name: str
+    personality_description: str | None = None
+    conversation_opener: str | None = None
+    always_do_rules: list[str]
+    never_do_rules: list[str]
+    restricted_topics: list[str]
+    redirect_message: str | None = None
+    escalation_keyword: str
+    escalation_situations: list[str]
+    escalation_message: str | None = None
+    max_response_length: int
+    use_emojis: bool
+    use_bullet_points: bool
+    conversation_closer: str | None = None
+    after_hours_message: str | None = None
+    response_language: str
+    ai_tone: str
+    created_at: str
+    updated_at: str
+
+
 class MessageResponse(BaseModel):
     id: str
     conversation_id: str

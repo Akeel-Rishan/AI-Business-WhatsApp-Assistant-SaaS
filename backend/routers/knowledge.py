@@ -7,12 +7,21 @@ from models.schemas import (
     KnowledgeBaseItemCreate,
     KnowledgeBaseItemResponse,
     KnowledgeBaseItemUpdate,
+    InstructionsResponse,
+    InstructionsUpdate,
 )
 from services.supabase import get_current_user_id, get_supabase
 
 router = APIRouter()
 
 ITEM_CATEGORIES = {"product", "service", "pricing", "policy", "delivery", "general"}
+INSTRUCTION_COLUMNS = (
+    "id,business_id,assistant_name,personality_description,conversation_opener,"
+    "always_do_rules,never_do_rules,restricted_topics,redirect_message,"
+    "escalation_keyword,escalation_situations,escalation_message,"
+    "max_response_length,use_emojis,use_bullet_points,conversation_closer,"
+    "after_hours_message,created_at,updated_at"
+)
 
 
 def _first_row(response: object) -> dict | None:
@@ -78,6 +87,65 @@ def _get_owned_faq(faq_id: str, user_id: str) -> dict:
 def _normalize_item(item: dict) -> dict:
     item["tags"] = item.get("tags") or []
     return item
+
+
+def _normalize_instructions(instructions: dict, ai_settings: dict | None = None) -> dict:
+    instructions["always_do_rules"] = instructions.get("always_do_rules") or []
+    instructions["never_do_rules"] = instructions.get("never_do_rules") or []
+    instructions["restricted_topics"] = instructions.get("restricted_topics") or []
+    instructions["escalation_situations"] = instructions.get("escalation_situations") or []
+    instructions["response_language"] = (ai_settings or {}).get("language") or "english"
+    instructions["ai_tone"] = (ai_settings or {}).get("tone") or "friendly"
+    return instructions
+
+
+def _get_ai_settings(business_id: str) -> dict | None:
+    supabase = get_supabase()
+    try:
+        response = (
+            supabase.table("ai_settings")
+            .select("tone,language")
+            .eq("business_id", business_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    return _first_row(response)
+
+
+def _get_or_create_instructions(business_id: str) -> dict:
+    supabase = get_supabase()
+    try:
+        response = (
+            supabase.table("business_instructions")
+            .select(INSTRUCTION_COLUMNS)
+            .eq("business_id", business_id)
+            .limit(1)
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    existing = _first_row(response)
+    if existing:
+        return existing
+
+    try:
+        create_response = (
+            supabase.table("business_instructions")
+            .insert({"business_id": business_id})
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    created = _first_row(create_response)
+    if not created:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not create instructions.")
+
+    return created
 
 
 def _validate_item_category(category: str | None) -> None:
@@ -319,3 +387,53 @@ async def delete_item(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Knowledge base item not found.")
 
     return {"success": True}
+
+
+@router.get("/instructions", response_model=InstructionsResponse)
+async def get_instructions(
+    business_id: str = Query(...),
+    user_id: str = Depends(get_current_user_id),
+) -> dict:
+    _assert_business_access(business_id, user_id)
+    instructions = _get_or_create_instructions(business_id)
+    ai_settings = _get_ai_settings(business_id)
+    return _normalize_instructions(instructions, ai_settings)
+
+
+@router.put("/instructions", response_model=InstructionsResponse)
+async def save_instructions(
+    payload: InstructionsUpdate,
+    business_id: str = Query(...),
+    user_id: str = Depends(get_current_user_id),
+) -> dict:
+    _assert_business_access(business_id, user_id)
+    update_payload = payload.model_dump(exclude_unset=True)
+    response_language = update_payload.pop("response_language", None)
+    supabase = get_supabase()
+
+    instruction_payload = {"business_id": business_id, **update_payload}
+
+    try:
+        response = (
+            supabase.table("business_instructions")
+            .upsert(instruction_payload, on_conflict="business_id")
+            .execute()
+        )
+    except Exception as exc:
+        _raise_database_error(exc)
+
+    saved = _first_row(response)
+    if not saved:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Could not save instructions.")
+
+    if response_language:
+        try:
+            supabase.table("ai_settings").upsert(
+                {"business_id": business_id, "language": response_language.lower()},
+                on_conflict="business_id",
+            ).execute()
+        except Exception as exc:
+            _raise_database_error(exc)
+
+    ai_settings = _get_ai_settings(business_id)
+    return _normalize_instructions(saved, ai_settings)

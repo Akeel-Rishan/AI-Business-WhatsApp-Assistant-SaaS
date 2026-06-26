@@ -116,6 +116,30 @@ export type ItemCategory =
   | "delivery"
   | "general";
 
+export interface BusinessInstructions {
+  id: string;
+  business_id: string;
+  assistant_name: string;
+  personality_description: string | null;
+  conversation_opener: string | null;
+  always_do_rules: string[];
+  never_do_rules: string[];
+  restricted_topics: string[];
+  redirect_message: string | null;
+  escalation_keyword: string;
+  escalation_situations: string[];
+  escalation_message: string | null;
+  max_response_length: number;
+  use_emojis: boolean;
+  use_bullet_points: boolean;
+  conversation_closer: string | null;
+  after_hours_message: string | null;
+  response_language: string;
+  ai_tone: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Lead {
   id: string;
   business_id: string;

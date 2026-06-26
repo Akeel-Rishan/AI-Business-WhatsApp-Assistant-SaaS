@@ -14,6 +14,7 @@ EXPECTED_TABLES = [
     "messages",
     "faqs",
     "knowledge_base_items",
+    "business_instructions",
     "leads",
     "ai_settings",
 ]
@@ -22,9 +23,11 @@ EXPECTED_PUBLIC_TRIGGERS = [
     "update_businesses_updated_at",
     "update_faqs_updated_at",
     "update_knowledge_base_items_updated_at",
+    "update_business_instructions_updated_at",
     "update_leads_updated_at",
     "update_ai_settings_updated_at",
     "create_business_ai_settings",
+    "auto_create_instructions",
     "update_message_conversation_last_message_at",
     "update_inbound_message_customer_stats",
 ]

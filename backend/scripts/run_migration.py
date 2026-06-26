@@ -41,6 +41,7 @@ def main() -> None:
                     'messages',
                     'faqs',
                     'knowledge_base_items',
+                    'business_instructions',
                     'leads',
                     'ai_settings'
                   )
@@ -56,6 +57,7 @@ def main() -> None:
         "messages",
         "faqs",
         "knowledge_base_items",
+        "business_instructions",
         "leads",
         "ai_settings",
     }
