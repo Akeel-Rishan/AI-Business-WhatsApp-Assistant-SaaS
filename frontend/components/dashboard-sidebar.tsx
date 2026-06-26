@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Route } from "next";
 import {
   BookOpen,
   Inbox,
@@ -7,13 +8,14 @@ import {
   MessageCircle,
   Settings,
   Target,
-  Users
+  Users,
+  type LucideIcon
 } from "lucide-react";
 import { logoutAction } from "@/app/actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
+const navItems: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dashboard/inbox", label: "Inbox", icon: Inbox },
   { href: "/dashboard/customers", label: "Customers", icon: Users },

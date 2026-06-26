@@ -34,19 +34,39 @@ Set these values in `frontend/.env.local`:
 
 ### 3. Backend
 
+Recommended with Anaconda:
+
 ```powershell
 cd backend
-python -m venv .venv
+conda env create -f environment.yml
+conda activate wa-assistant-backend
+Copy-Item .env.example .env
+python -m uvicorn main:app --reload --port 8000
+```
+
+If PowerShell still uses `C:\Python314\python.exe` after `conda activate`, run the Conda env Python directly:
+
+```powershell
+& "D:\anaconda3\envs\wa-assistant-backend\python.exe" -m uvicorn main:app --reload --port 8000
+```
+
+Alternative with a standalone Python 3.11 or 3.12 installation:
+
+```powershell
+cd backend
+py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 Copy-Item .env.example .env
-uvicorn main:app --reload --port 8000
+python -m uvicorn main:app --reload --port 8000
 ```
+
+Do not create the backend environment with Python 3.14. Some dependencies, including `pydantic-core`, may try to compile native Rust extensions and fail instead of installing prebuilt wheels.
 
 Set these values in `backend/.env`:
 
 - `SUPABASE_URL`: Supabase project URL.
-- `SUPABASE_SERVICE_ROLE_KEY`: Supabase service role key for trusted API operations.
+- `SUPABASE_SECRET_KEY`: Supabase secret key (`sb_secret_...`) for trusted backend operations. In the Supabase Dashboard, copy this from Settings > API Keys > Secret keys. Legacy projects may show this as the `service_role` key instead.
 - `GEMINI_API_KEY`: Reserved for future Gemini-powered replies.
 - `FRONTEND_URL`: Frontend origin, usually `http://localhost:3000`.
 

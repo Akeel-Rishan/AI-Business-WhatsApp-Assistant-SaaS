@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/tsconfig.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+backend/.venv/
+
+# Environment files
+.env
+.env.local
+frontend/.env.local
+backend/.env
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local run logs
+*.log

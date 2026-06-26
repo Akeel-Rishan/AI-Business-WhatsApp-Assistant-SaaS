@@ -30,10 +30,6 @@
     @apply border-border;
   }
 
-  html {
-    @apply dark;
-  }
-
   body {
     @apply min-h-screen bg-background text-foreground antialiased;
   }

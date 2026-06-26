@@ -7,12 +7,12 @@ from supabase import Client, create_client
 @lru_cache
 def get_supabase() -> Client:
     url = os.getenv("SUPABASE_URL")
-    service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    secret_key = os.getenv("SUPABASE_SECRET_KEY") or os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-    if not url or not service_role_key:
-        raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.")
+    if not url or not secret_key:
+        raise RuntimeError("SUPABASE_URL and SUPABASE_SECRET_KEY must be configured.")
 
-    return create_client(url, service_role_key)
+    return create_client(url, secret_key)
 
 
 async def get_current_user_id(authorization: str | None = Header(default=None)) -> str:
