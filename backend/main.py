@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
@@ -6,6 +7,20 @@ from dotenv import load_dotenv
 from routers import auth, business, health, knowledge, leads, messages, webhook
 
 load_dotenv()
+
+def _load_non_empty_env(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        if value.strip():
+            os.environ[key.strip()] = value.strip().strip('"').strip("'")
+
+
+_load_non_empty_env(Path(".env"))
 
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 allowed_origins = [origin.strip() for origin in f"http://localhost:3000,{frontend_url}".split(",") if origin.strip()]

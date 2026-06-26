@@ -19,6 +19,10 @@ EXPECTED_TABLES = [
     "ai_settings",
 ]
 
+EXPECTED_BACKEND_TABLES = [
+    "webhook_logs",
+]
+
 EXPECTED_PUBLIC_TRIGGERS = [
     "update_businesses_updated_at",
     "update_faqs_updated_at",
@@ -67,6 +71,18 @@ def main() -> None:
 
             cursor.execute(
                 """
+                select table_name
+                from information_schema.tables
+                where table_schema = 'public'
+                  and table_name = any(%s)
+                order by table_name;
+                """,
+                (EXPECTED_BACKEND_TABLES,),
+            )
+            backend_tables = [row[0] for row in cursor.fetchall()]
+
+            cursor.execute(
+                """
                 select tgname
                 from pg_trigger
                 join pg_class on pg_class.oid = pg_trigger.tgrelid
@@ -109,12 +125,15 @@ def main() -> None:
             business_columns = [row[0] for row in cursor.fetchall()]
 
     missing_rls = sorted(set(EXPECTED_TABLES) - set(rls_tables))
+    missing_backend_tables = sorted(set(EXPECTED_BACKEND_TABLES) - set(backend_tables))
     missing_public_triggers = sorted(set(EXPECTED_PUBLIC_TRIGGERS) - set(public_triggers))
     missing_auth_triggers = sorted(set(EXPECTED_AUTH_TRIGGERS) - set(auth_triggers))
     missing_business_columns = sorted(set(EXPECTED_BUSINESS_COLUMNS) - set(business_columns))
 
     if missing_rls:
         raise RuntimeError(f"RLS is missing on: {', '.join(missing_rls)}")
+    if missing_backend_tables:
+        raise RuntimeError(f"Backend-only tables are missing: {', '.join(missing_backend_tables)}")
     if missing_public_triggers:
         raise RuntimeError(f"Public triggers are missing: {', '.join(missing_public_triggers)}")
     if missing_auth_triggers:
@@ -132,6 +151,9 @@ def main() -> None:
     print("Verified business onboarding columns:")
     for column in business_columns:
         print(f"- {column}")
+    print("Verified backend-only tables:")
+    for table in backend_tables:
+        print(f"- {table}")
 
 
 if __name__ == "__main__":

@@ -12,18 +12,37 @@ import psycopg
 from dotenv import load_dotenv
 from fastapi import Header, HTTPException, status
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
 
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 PROJECT_DIR = ROOT_DIR.parent
 load_dotenv(ROOT_DIR / ".env")
+
+def _load_non_empty_env(path: Path) -> None:
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, value = stripped.split("=", 1)
+        if value.strip():
+            os.environ[key.strip()] = value.strip().strip('"').strip("'")
+
+
+_load_non_empty_env(ROOT_DIR / ".env")
 IDENTIFIER_RE = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 ALLOWED_TABLES = {
     "ai_settings",
     "business_instructions",
     "businesses",
+    "conversations",
+    "customers",
     "faqs",
     "knowledge_base_items",
+    "messages",
+    "webhook_logs",
 }
 
 
@@ -52,6 +71,12 @@ def _normalize_value(value: Any) -> Any:
 
 def _normalize_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [_normalize_value(row) for row in rows]
+
+
+def _adapt_param(value: Any) -> Any:
+    if isinstance(value, dict):
+        return Jsonb(value)
+    return value
 
 
 def _read_env_file(path: Path, key: str) -> str | None:
@@ -223,7 +248,7 @@ class TableQuery:
             raise ValueError("Insert payload is required")
 
         columns = list(self._payload.keys())
-        params = [self._payload[column] for column in columns]
+        params = [_adapt_param(self._payload[column]) for column in columns]
         sql = (
             f"insert into {_quote_identifier(self.table_name)} "
             f"({', '.join(_quote_identifier(column) for column in columns)}) "
@@ -240,7 +265,7 @@ class TableQuery:
         conflict_columns = [column.strip() for column in self._on_conflict.split(",") if column.strip()]
         columns = list(self._payload.keys())
         update_columns = [column for column in columns if column not in conflict_columns]
-        params = [self._payload[column] for column in columns]
+        params = [_adapt_param(self._payload[column]) for column in columns]
 
         if update_columns:
             update_sql = ", ".join(
@@ -263,7 +288,7 @@ class TableQuery:
         if not self._payload:
             raise ValueError("Update payload is required")
 
-        params = [self._payload[column] for column in self._payload.keys()]
+        params = [_adapt_param(self._payload[column]) for column in self._payload.keys()]
         sql = (
             f"update {_quote_identifier(self.table_name)} set "
             f"{', '.join(f'{_quote_identifier(column)} = %s' for column in self._payload.keys())}"
