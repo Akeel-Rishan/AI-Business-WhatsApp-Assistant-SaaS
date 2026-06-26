@@ -27,9 +27,10 @@ type TopBarProps = {
   userEmail?: string | null;
 };
 
-export function TopBar({ userEmail = "admin@waassistant.app" }: TopBarProps) {
+export function TopBar({ userEmail }: TopBarProps) {
   const pathname = usePathname();
   const title = titles[pathname] ?? "Dashboard";
+  const displayEmail = userEmail ?? "Signed in";
   const initials = userEmail?.slice(0, 2).toUpperCase() ?? "WA";
 
   return (
@@ -52,7 +53,7 @@ export function TopBar({ userEmail = "admin@waassistant.app" }: TopBarProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            <DropdownMenuLabel>{userEmail}</DropdownMenuLabel>
+            <DropdownMenuLabel>{displayEmail}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <User className="mr-2 h-4 w-4" />

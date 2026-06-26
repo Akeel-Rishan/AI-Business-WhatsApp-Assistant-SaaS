@@ -12,10 +12,10 @@ export default function LandingPage() {
           <Logo />
           <div className="flex items-center gap-3">
             <Button asChild variant="ghost">
-              <Link href="/login">Login</Link>
+              <Link href="/auth/login">Login</Link>
             </Button>
             <Button asChild>
-              <Link href="/register">Register</Link>
+              <Link href="/auth/register">Register</Link>
             </Button>
           </div>
         </nav>
@@ -27,7 +27,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-8 flex gap-3">
               <Button asChild size="lg">
-                <Link href="/register">Create workspace</Link>
+                <Link href="/auth/register">Create workspace</Link>
               </Button>
               <Button asChild variant="outline" size="lg">
                 <Link href="/dashboard">View dashboard</Link>

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 
 const protectedRoutes = ["/dashboard", "/inbox", "/customers", "/knowledge-base", "/leads", "/settings", "/onboarding"];
+const authRoutes = ["/auth/login", "/auth/register", "/"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
@@ -32,11 +33,18 @@ export async function middleware(request: NextRequest) {
     data: { user }
   } = await supabase.auth.getUser();
 
-  const isProtected = protectedRoutes.some((route) => request.nextUrl.pathname === route);
+  const isProtected = protectedRoutes.some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`));
+  const isAuthRoute = authRoutes.includes(request.nextUrl.pathname);
 
   if (isProtected && !user) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/login";
+    redirectUrl.pathname = "/auth/login";
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isAuthRoute && user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/dashboard";
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -44,5 +52,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard", "/inbox", "/customers", "/knowledge-base", "/leads", "/settings", "/onboarding"]
+  matcher: ["/", "/auth/login", "/auth/register", "/dashboard/:path*", "/inbox/:path*", "/customers/:path*", "/knowledge-base/:path*", "/leads/:path*", "/settings/:path*", "/onboarding/:path*"]
 };

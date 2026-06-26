@@ -1,12 +1,21 @@
+"use client";
+
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopBar } from "@/components/layout/TopBar";
+import { PageLoader } from "@/components/shared/PageLoader";
+import { useUser } from "@/hooks/useUser";
 
 export default function DashboardLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
-  const userEmail = "admin@waassistant.app";
+  const { user, loading } = useUser();
+  const userEmail = user?.email ?? null;
+
+  if (loading) {
+    return <PageLoader />;
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">

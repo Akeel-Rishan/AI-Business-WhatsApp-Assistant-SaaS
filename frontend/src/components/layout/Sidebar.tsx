@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpen,
   LayoutDashboard,
@@ -16,6 +16,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Logo } from "@/components/shared/Logo";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const navItems: { href: string; label: string; icon: LucideIcon }[] = [
@@ -32,9 +33,18 @@ type SidebarProps = {
   onNavigate?: () => void;
 };
 
-export function Sidebar({ userEmail = "admin@waassistant.app", onNavigate }: SidebarProps) {
+export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const displayEmail = userEmail ?? "Signed in";
   const initials = userEmail?.slice(0, 2).toUpperCase() ?? "WA";
+
+  async function handleLogout() {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+    router.refresh();
+  }
 
   return (
     <aside className="flex h-full w-64 flex-col border-r border-sidebar-border bg-sidebar">
@@ -67,11 +77,16 @@ export function Sidebar({ userEmail = "admin@waassistant.app", onNavigate }: Sid
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-white">{userEmail}</p>
+            <p className="truncate text-sm font-medium text-white">{displayEmail}</p>
             <p className="text-xs text-muted-foreground">Workspace admin</p>
           </div>
         </div>
-        <Button variant="outline" className="w-full justify-start gap-2 border-sidebar-border bg-transparent">
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full justify-start gap-2 border-sidebar-border bg-transparent"
+          onClick={handleLogout}
+        >
           <LogOut className="h-4 w-4" />
           Logout
         </Button>
