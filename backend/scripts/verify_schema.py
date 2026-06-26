@@ -33,6 +33,13 @@ EXPECTED_AUTH_TRIGGERS = [
     "create_business_for_new_auth_user",
 ]
 
+EXPECTED_BUSINESS_COLUMNS = [
+    "business_type",
+    "website_url",
+    "timezone",
+    "after_hours_message",
+]
+
 
 def main() -> None:
     load_dotenv(ROOT_DIR / "backend" / ".env")
@@ -85,9 +92,23 @@ def main() -> None:
             )
             auth_triggers = [row[0] for row in cursor.fetchall()]
 
+            cursor.execute(
+                """
+                select column_name
+                from information_schema.columns
+                where table_schema = 'public'
+                  and table_name = 'businesses'
+                  and column_name = any(%s)
+                order by column_name;
+                """,
+                (EXPECTED_BUSINESS_COLUMNS,),
+            )
+            business_columns = [row[0] for row in cursor.fetchall()]
+
     missing_rls = sorted(set(EXPECTED_TABLES) - set(rls_tables))
     missing_public_triggers = sorted(set(EXPECTED_PUBLIC_TRIGGERS) - set(public_triggers))
     missing_auth_triggers = sorted(set(EXPECTED_AUTH_TRIGGERS) - set(auth_triggers))
+    missing_business_columns = sorted(set(EXPECTED_BUSINESS_COLUMNS) - set(business_columns))
 
     if missing_rls:
         raise RuntimeError(f"RLS is missing on: {', '.join(missing_rls)}")
@@ -95,6 +116,8 @@ def main() -> None:
         raise RuntimeError(f"Public triggers are missing: {', '.join(missing_public_triggers)}")
     if missing_auth_triggers:
         raise RuntimeError(f"Auth triggers are missing: {', '.join(missing_auth_triggers)}")
+    if missing_business_columns:
+        raise RuntimeError(f"Business columns are missing: {', '.join(missing_business_columns)}")
 
     print("Schema verification successful.")
     print("RLS enabled tables:")
@@ -103,6 +126,9 @@ def main() -> None:
     print("Verified triggers:")
     for trigger in public_triggers + auth_triggers:
         print(f"- {trigger}")
+    print("Verified business onboarding columns:")
+    for column in business_columns:
+        print(f"- {column}")
 
 
 if __name__ == "__main__":

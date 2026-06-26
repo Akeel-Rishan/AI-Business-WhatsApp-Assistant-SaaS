@@ -2,10 +2,14 @@ export interface Business {
   id: string;
   user_id: string;
   name: string;
+  business_type: string | null;
   description: string | null;
   opening_hours: string | null;
+  timezone: string | null;
+  after_hours_message: string | null;
   location: string | null;
   contact_info: string | null;
+  website_url: string | null;
   whatsapp_number: string | null;
   whatsapp_phone_id: string | null;
   whatsapp_access_token: string | null;
