@@ -83,18 +83,10 @@ export default function RegisterPage() {
         return;
       }
 
-      const { error: businessError } = await supabase.from("businesses").insert({
-        user_id: data.user.id,
-        name: businessName.trim()
-      });
-
-      if (businessError) {
-        setError(businessError.message);
-        return;
-      }
-
       setSuccess(true);
-      window.setTimeout(() => router.push("/onboarding"), 250);
+      window.setTimeout(() => {
+        router.push(data.session ? "/onboarding" : "/auth/login");
+      }, 250);
     } catch {
       setError("Please check your internet connection.");
     } finally {

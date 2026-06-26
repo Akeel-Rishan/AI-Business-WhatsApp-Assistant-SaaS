@@ -43,7 +43,14 @@ export default function LoginPage() {
       });
 
       if (signInError || !data.user) {
-        setError("Invalid email or password");
+        const message = signInError?.message?.toLowerCase() ?? "";
+        if (message.includes("email not confirmed") || message.includes("not confirmed")) {
+          setError("Please confirm your email address before signing in.");
+        } else if (message.includes("invalid login credentials") || message.includes("invalid")) {
+          setError("Invalid email or password");
+        } else {
+          setError(signInError?.message ?? "Unable to sign in. Please try again.");
+        }
         return;
       }
 
