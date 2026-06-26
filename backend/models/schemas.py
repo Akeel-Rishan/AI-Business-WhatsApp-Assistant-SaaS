@@ -74,16 +74,32 @@ class FAQResponse(BaseModel):
 
 
 class KnowledgeBaseItemCreate(BaseModel):
-    category: str | None = None
-    title: str = Field(min_length=1)
-    content: str = Field(min_length=1)
+    business_id: str
+    category: str = Field(min_length=1)
+    title: str = Field(min_length=1, max_length=100)
+    content: str = Field(min_length=1, max_length=2000)
+    tags: list[str] = Field(default_factory=list, max_length=10)
     is_active: bool = True
 
 
-class KnowledgeBaseItemResponse(KnowledgeBaseItemCreate):
+class KnowledgeBaseItemUpdate(BaseModel):
+    category: str | None = None
+    title: str | None = Field(default=None, min_length=1, max_length=100)
+    content: str | None = Field(default=None, min_length=1, max_length=2000)
+    tags: list[str] | None = Field(default=None, max_length=10)
+    is_active: bool | None = None
+
+
+class KnowledgeBaseItemResponse(BaseModel):
     id: str
     business_id: str
+    category: str
+    title: str
+    content: str
+    tags: list[str] = Field(default_factory=list)
+    is_active: bool
     created_at: str
+    updated_at: str
 
 
 class MessageResponse(BaseModel):

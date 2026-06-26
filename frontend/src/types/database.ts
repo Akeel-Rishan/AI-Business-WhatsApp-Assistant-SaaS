@@ -82,14 +82,39 @@ export interface FAQUpdate {
 export interface KnowledgeBaseItem {
   id: string;
   business_id: string;
-  category: "product" | "service" | "policy" | "general" | "pricing" | "delivery";
+  category: ItemCategory;
   title: string;
   content: string;
-  tags: string[] | null;
+  tags: string[];
   is_active: boolean;
   created_at: string;
   updated_at: string;
 }
+
+export interface KnowledgeBaseItemCreate {
+  business_id: string;
+  category: string;
+  title: string;
+  content: string;
+  tags?: string[];
+  is_active?: boolean;
+}
+
+export interface KnowledgeBaseItemUpdate {
+  category?: string;
+  title?: string;
+  content?: string;
+  tags?: string[];
+  is_active?: boolean;
+}
+
+export type ItemCategory =
+  | "product"
+  | "service"
+  | "pricing"
+  | "policy"
+  | "delivery"
+  | "general";
 
 export interface Lead {
   id: string;
