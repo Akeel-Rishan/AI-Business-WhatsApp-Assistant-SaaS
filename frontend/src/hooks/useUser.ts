@@ -5,6 +5,21 @@ import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import type { Business } from "@/types/database";
 
+const REQUEST_TIMEOUT_MS = 12000;
+
+function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${REQUEST_TIMEOUT_MS / 1000}s`));
+    }, REQUEST_TIMEOUT_MS);
+
+    Promise.resolve(promise)
+      .then(resolve)
+      .catch(reject)
+      .finally(() => window.clearTimeout(timeoutId));
+  });
+}
+
 export function useUser() {
   const [user, setUser] = useState<User | null>(null);
   const [business, setBusiness] = useState<Business | null>(null);
@@ -15,31 +30,49 @@ export function useUser() {
     let isMounted = true;
 
     async function loadUserAndBusiness() {
-      setLoading(true);
-      const {
-        data: { user: currentUser }
-      } = await supabase.auth.getUser();
+      try {
+        setLoading(true);
+        const {
+          data: { user: currentUser }
+        } = await withTimeout(supabase.auth.getUser(), "Loading user session");
 
-      if (!isMounted) return;
+        if (!isMounted) return;
 
-      setUser(currentUser);
+        setUser(currentUser);
 
-      if (!currentUser) {
+        if (!currentUser) {
+          setBusiness(null);
+          return;
+        }
+
+        const businessResult = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from("businesses")
+              .select("*")
+              .eq("user_id", currentUser.id)
+              .maybeSingle()
+          ),
+          "Loading business profile"
+        );
+        const { data: businessRow, error: businessError } = businessResult;
+
+        if (!isMounted) return;
+
+        if (businessError) {
+          throw businessError;
+        }
+
+        setBusiness((businessRow as Business | null) ?? null);
+      } catch (error) {
+        console.error("Failed to load user session:", error);
+        if (!isMounted) return;
+        setUser(null);
         setBusiness(null);
+      } finally {
+        if (!isMounted) return;
         setLoading(false);
-        return;
       }
-
-      const { data: businessRow } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (!isMounted) return;
-
-      setBusiness((businessRow as Business | null) ?? null);
-      setLoading(false);
     }
 
     loadUserAndBusiness();
@@ -49,25 +82,44 @@ export function useUser() {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!isMounted) return;
 
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
+      try {
+        setLoading(true);
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
 
-      if (!currentUser) {
+        if (!currentUser) {
+          setBusiness(null);
+          return;
+        }
+
+        const businessResult = await withTimeout(
+          Promise.resolve(
+            supabase
+              .from("businesses")
+              .select("*")
+              .eq("user_id", currentUser.id)
+              .maybeSingle()
+          ),
+          "Refreshing business profile"
+        );
+        const { data: businessRow, error: businessError } = businessResult;
+
+        if (!isMounted) return;
+
+        if (businessError) {
+          throw businessError;
+        }
+
+        setBusiness((businessRow as Business | null) ?? null);
+      } catch (error) {
+        console.error("Failed to refresh user session:", error);
+        if (!isMounted) return;
+        setUser(null);
         setBusiness(null);
+      } finally {
+        if (!isMounted) return;
         setLoading(false);
-        return;
       }
-
-      const { data: businessRow } = await supabase
-        .from("businesses")
-        .select("*")
-        .eq("user_id", currentUser.id)
-        .maybeSingle();
-
-      if (!isMounted) return;
-
-      setBusiness((businessRow as Business | null) ?? null);
-      setLoading(false);
     });
 
     return () => {
