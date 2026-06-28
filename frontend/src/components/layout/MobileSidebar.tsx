@@ -8,9 +8,11 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 type MobileSidebarProps = {
   userEmail?: string | null;
+  whatsappConnected?: boolean;
+  whatsappLoading?: boolean;
 };
 
-export function MobileSidebar({ userEmail }: MobileSidebarProps) {
+export function MobileSidebar({ userEmail, whatsappConnected, whatsappLoading }: MobileSidebarProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -22,7 +24,7 @@ export function MobileSidebar({ userEmail }: MobileSidebarProps) {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 border-sidebar-border bg-sidebar p-0">
-        <Sidebar userEmail={userEmail} onNavigate={() => setOpen(false)} />
+        <Sidebar userEmail={userEmail} whatsappConnected={whatsappConnected} whatsappLoading={whatsappLoading} onNavigate={() => setOpen(false)} />
       </SheetContent>
     </Sheet>
   );

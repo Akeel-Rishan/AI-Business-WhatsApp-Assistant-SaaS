@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import psycopg
 from psycopg.rows import dict_row
 
-from services.supabase import _database_url
+from services.supabase import get_database_url
 from utils.logger import get_logger
 
 
@@ -39,7 +39,7 @@ async def get_webhook_health(webhook_url: str, started_at: datetime) -> dict:
     since = datetime.now(timezone.utc) - timedelta(hours=24)
 
     try:
-        with psycopg.connect(_database_url(), row_factory=dict_row) as connection:
+        with psycopg.connect(get_database_url(), row_factory=dict_row) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(
                     """

@@ -108,3 +108,7 @@
 .auth-error-slide {
   animation: auth-error-slide 200ms ease both;
 }
+
+.secure-entry {
+  -webkit-text-security: disc;
+}

@@ -11,13 +11,37 @@ export interface Business {
   contact_info: string | null;
   website_url: string | null;
   whatsapp_number: string | null;
-  whatsapp_phone_id: string | null;
-  whatsapp_access_token: string | null;
-  webhook_verify_token: string | null;
   is_active: boolean;
   onboarding_completed: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface WhatsAppCredentialsInput {
+  business_id: string;
+  whatsapp_number: string;
+  whatsapp_phone_id: string;
+  whatsapp_access_token: string;
+  webhook_verify_token: string;
+}
+
+export interface ConnectionTestResult {
+  credentials_saved: boolean;
+  meta_api_reachable: boolean;
+  phone_number_valid: boolean;
+  verified_name: string | null;
+  phone_number: string | null;
+  errors: Record<string, string>;
+  overall_success: boolean;
+}
+
+export interface WhatsAppStatus {
+  is_connected: boolean;
+  whatsapp_number: string | null;
+  phone_number_id_preview: string | null;
+  ai_enabled: boolean;
+  connected_since: string | null;
+  test_result?: ConnectionTestResult | null;
 }
 
 export interface Customer {

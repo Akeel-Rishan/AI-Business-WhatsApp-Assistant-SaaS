@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Business } from "@/types/database";
 
 const REQUEST_TIMEOUT_MS = 12000;
+const SAFE_BUSINESS_COLUMNS = "id,user_id,name,business_type,description,opening_hours,timezone,after_hours_message,location,contact_info,website_url,whatsapp_number,is_active,onboarding_completed,created_at,updated_at";
 
 function withTimeout<T>(promise: PromiseLike<T>, label: string): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -49,7 +50,7 @@ export function useUser() {
           Promise.resolve(
             supabase
               .from("businesses")
-              .select("*")
+              .select(SAFE_BUSINESS_COLUMNS)
               .eq("user_id", currentUser.id)
               .maybeSingle()
           ),
@@ -96,7 +97,7 @@ export function useUser() {
           Promise.resolve(
             supabase
               .from("businesses")
-              .select("*")
+              .select(SAFE_BUSINESS_COLUMNS)
               .eq("user_id", currentUser.id)
               .maybeSingle()
           ),

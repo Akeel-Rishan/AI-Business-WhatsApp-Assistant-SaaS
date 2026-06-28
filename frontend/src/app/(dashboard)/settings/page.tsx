@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CheckCircle, Lock } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { CharacterCounter } from "@/components/shared/CharacterCounter";
 import { FormSection } from "@/components/shared/FormSection";
 import { LoadingSpinner } from "@/components/shared/LoadingSpinner";
 import { PageLoader } from "@/components/shared/PageLoader";
 import { ToneSelector, type ToneValue } from "@/components/shared/ToneSelector";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,6 +49,7 @@ type AIForm = {
 const defaultFallback = "Thank you for your message! Our team will get back to you shortly. For urgent matters, please call us directly.";
 
 export default function SettingsPage() {
+  const router = useRouter();
   const { user, business, loading } = useUser();
   const { toast } = useToast();
   const [profileSaving, setProfileSaving] = useState(false);
@@ -201,7 +201,7 @@ export default function SettingsPage() {
         <TabsList className="grid w-full grid-cols-3 md:w-auto">
           <TabsTrigger value="profile">Business Profile</TabsTrigger>
           <TabsTrigger value="ai">AI Settings</TabsTrigger>
-          <TabsTrigger value="whatsapp">WhatsApp Connection</TabsTrigger>
+          <TabsTrigger value="whatsapp" onClick={() => router.push("/settings/whatsapp")}>WhatsApp Connection</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -287,33 +287,6 @@ export default function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="whatsapp">
-          <Card className="border-[#1f1f1f] bg-[#111111]">
-            <CardContent className="p-8">
-              <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-[#1a1a1a] text-muted-foreground">
-                  <Lock className="h-6 w-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-3">
-                    <h2 className="text-2xl font-semibold">WhatsApp Integration</h2>
-                    <Badge>Coming in Phase 3</Badge>
-                  </div>
-                  <p className="mt-2 text-muted-foreground">Connect your WhatsApp Business number to start receiving and sending automated messages.</p>
-                </div>
-              </div>
-              <div className="mt-8 grid gap-3">
-                {["Meta Business Account", "WhatsApp Business App", "Verified Phone Number", "Meta App with WhatsApp API access"].map((item) => (
-                  <div key={item} className="flex items-center gap-3 rounded-md border border-[#2a2a2a] bg-[#1a1a1a] p-3">
-                    <CheckCircle className="h-4 w-4 text-brand" />
-                    <span className="text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
-              <Button disabled className="mt-8 bg-brand text-black opacity-50">Connect WhatsApp</Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

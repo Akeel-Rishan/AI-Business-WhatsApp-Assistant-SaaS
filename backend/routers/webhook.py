@@ -10,6 +10,7 @@ from services.pipeline.pipeline_monitor import get_pipeline_stats
 from services.supabase import get_supabase
 from services.webhook_logger import get_webhook_health, log_webhook_event
 from services.webhook_processor import process_webhook_payload
+from services.whatsapp_connection import verify_saved_token
 from utils.logger import get_logger
 
 
@@ -50,8 +51,17 @@ async def verify_webhook(
 ) -> PlainTextResponse:
     expected_token = os.getenv("WEBHOOK_VERIFY_TOKEN")
 
-    if expected_token and hub_mode == "subscribe" and hmac.compare_digest(hub_verify_token, expected_token):
-        return PlainTextResponse(hub_challenge, status_code=status.HTTP_200_OK)
+    if hub_mode == "subscribe":
+        global_match = bool(
+            expected_token and hmac.compare_digest(hub_verify_token, expected_token)
+        )
+        try:
+            business_match = verify_saved_token(hub_verify_token)
+        except Exception:
+            logger.exception("Could not check business webhook verify token.")
+            business_match = False
+        if global_match or business_match:
+            return PlainTextResponse(hub_challenge, status_code=status.HTTP_200_OK)
 
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN,

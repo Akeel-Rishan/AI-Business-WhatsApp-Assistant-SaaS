@@ -215,3 +215,45 @@ class AISettingsResponse(BaseModel):
 class WebhookVerificationResponse(BaseModel):
     status: str
     detail: str
+
+
+class WhatsAppCredentialsInput(BaseModel):
+    business_id: str
+    whatsapp_number: str = Field(min_length=7, max_length=32)
+    whatsapp_phone_id: str = Field(min_length=5, max_length=64)
+    whatsapp_access_token: str = Field(min_length=10)
+    webhook_verify_token: str = Field(min_length=12, max_length=160)
+
+
+class WhatsAppCredentialsResponse(BaseModel):
+    business_id: str
+    whatsapp_number: str
+    phone_number_id_preview: str
+    connected_since: str
+
+
+class ConnectionTestInput(BaseModel):
+    business_id: str
+
+
+class ConnectionTestResult(BaseModel):
+    credentials_saved: bool
+    meta_api_reachable: bool
+    phone_number_valid: bool
+    verified_name: str | None = None
+    phone_number: str | None = None
+    errors: dict[str, str] = Field(default_factory=dict)
+    overall_success: bool
+
+
+class WhatsAppStatus(BaseModel):
+    is_connected: bool
+    whatsapp_number: str | None = None
+    phone_number_id_preview: str | None = None
+    ai_enabled: bool
+    connected_since: str | None = None
+
+
+class AIEnabledInput(BaseModel):
+    business_id: str
+    is_enabled: bool

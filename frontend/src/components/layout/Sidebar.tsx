@@ -37,10 +37,12 @@ const knowledgeSubItems = [
 
 type SidebarProps = {
   userEmail?: string | null;
+  whatsappConnected?: boolean;
+  whatsappLoading?: boolean;
   onNavigate?: () => void;
 };
 
-export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
+export function Sidebar({ userEmail, whatsappConnected = false, whatsappLoading = false, onNavigate }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [knowledgeOpen, setKnowledgeOpen] = useState(pathname.startsWith("/knowledge-base"));
@@ -68,20 +70,34 @@ export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
       <Separator className="bg-sidebar-border" />
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navItems.slice(0, 3).map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href === "/settings" && pathname.startsWith("/settings/"));
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
-                isActive && "border-brand bg-[#161616] text-white"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
+                  isActive && "border-brand bg-[#161616] text-white"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
+              {item.href === "/settings" ? (
+                <Link
+                  href="/settings/whatsapp"
+                  onClick={onNavigate}
+                  className={cn(
+                    "ml-8 mt-1 flex h-7 items-center gap-2 rounded px-2 text-xs transition-colors",
+                    whatsappConnected ? "text-brand hover:bg-brand/5" : "text-yellow-300 hover:bg-yellow-500/5"
+                  )}
+                >
+                  <span className={cn("h-1.5 w-1.5 rounded-full", whatsappLoading ? "animate-pulse bg-zinc-500" : whatsappConnected ? "bg-brand" : "bg-yellow-300")} />
+                  {whatsappLoading ? "Checking WhatsApp" : whatsappConnected ? "WhatsApp Active" : "Connect WhatsApp"}
+                </Link>
+              ) : null}
+            </div>
           );
         })}
         <div>
@@ -120,20 +136,34 @@ export function Sidebar({ userEmail, onNavigate }: SidebarProps) {
           ) : null}
         </div>
         {navItems.slice(3).map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href === "/settings" && pathname.startsWith("/settings/"));
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={onNavigate}
-              className={cn(
-                "flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
-                isActive && "border-brand bg-[#161616] text-white"
-              )}
-            >
-              <item.icon className="h-4 w-4" />
-              <span>{item.label}</span>
-            </Link>
+            <div key={item.href}>
+              <Link
+                href={item.href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex h-10 items-center gap-3 rounded-md border-l-2 border-transparent px-3 text-sm text-muted-foreground transition-colors hover:bg-[#161616] hover:text-white",
+                  isActive && "border-brand bg-[#161616] text-white"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
+              {item.href === "/settings" ? (
+                <Link
+                  href="/settings/whatsapp"
+                  onClick={onNavigate}
+                  className={cn(
+                    "ml-8 mt-1 flex h-7 items-center gap-2 rounded px-2 text-xs transition-colors",
+                    whatsappConnected ? "text-brand hover:bg-brand/5" : "text-yellow-300 hover:bg-yellow-500/5"
+                  )}
+                >
+                  <span className={cn("h-1.5 w-1.5 rounded-full", whatsappLoading ? "animate-pulse bg-zinc-500" : whatsappConnected ? "bg-brand" : "bg-yellow-300")} />
+                  {whatsappLoading ? "Checking WhatsApp" : whatsappConnected ? "WhatsApp Active" : "Connect WhatsApp"}
+                </Link>
+              ) : null}
+            </div>
           );
         })}
       </nav>

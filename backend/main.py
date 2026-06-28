@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-from routers import auth, business, health, knowledge, leads, messages, webhook
+from routers import auth, business, health, knowledge, leads, messages, webhook, whatsapp
 from services.pipeline.dead_letter import dead_letter_retry_worker
 
 BACKEND_DIR = Path(__file__).resolve().parent
@@ -56,3 +56,4 @@ app.include_router(webhook.router, prefix="/api/v1/webhook", tags=["webhook"])
 app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["knowledge"])
 app.include_router(messages.router, prefix="/api/v1/messages", tags=["messages"])
 app.include_router(leads.router, prefix="/api/v1/leads", tags=["leads"])
+app.include_router(whatsapp.router, prefix="/api/v1/whatsapp", tags=["whatsapp"])

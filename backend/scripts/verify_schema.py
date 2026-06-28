@@ -48,6 +48,12 @@ EXPECTED_BUSINESS_COLUMNS = [
     "after_hours_message",
 ]
 
+PROTECTED_WHATSAPP_COLUMNS = [
+    "whatsapp_phone_id",
+    "whatsapp_access_token",
+    "webhook_verify_token",
+]
+
 
 def main() -> None:
     load_dotenv(ROOT_DIR / "backend" / ".env")
@@ -125,6 +131,21 @@ def main() -> None:
             )
             business_columns = [row[0] for row in cursor.fetchall()]
 
+            cursor.execute(
+                """
+                select column_name
+                from unnest(%s::text[]) as column_name
+                where has_column_privilege(
+                  'authenticated',
+                  'public.businesses',
+                  column_name,
+                  'select'
+                );
+                """,
+                (PROTECTED_WHATSAPP_COLUMNS,),
+            )
+            exposed_whatsapp_columns = [row[0] for row in cursor.fetchall()]
+
     missing_rls = sorted(set(EXPECTED_TABLES) - set(rls_tables))
     missing_backend_tables = sorted(set(EXPECTED_BACKEND_TABLES) - set(backend_tables))
     missing_public_triggers = sorted(set(EXPECTED_PUBLIC_TRIGGERS) - set(public_triggers))
@@ -141,6 +162,11 @@ def main() -> None:
         raise RuntimeError(f"Auth triggers are missing: {', '.join(missing_auth_triggers)}")
     if missing_business_columns:
         raise RuntimeError(f"Business columns are missing: {', '.join(missing_business_columns)}")
+    if exposed_whatsapp_columns:
+        raise RuntimeError(
+            "Authenticated browser role can read protected WhatsApp columns: "
+            + ", ".join(exposed_whatsapp_columns)
+        )
 
     print("Schema verification successful.")
     print("RLS enabled tables:")
@@ -155,6 +181,7 @@ def main() -> None:
     print("Verified backend-only tables:")
     for table in backend_tables:
         print(f"- {table}")
+    print("Verified WhatsApp credentials are write-only for authenticated browser clients.")
 
 
 if __name__ == "__main__":

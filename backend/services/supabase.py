@@ -92,7 +92,7 @@ def _read_env_file(path: Path, key: str) -> str | None:
     return None
 
 
-def _database_url() -> str:
+def get_database_url() -> str:
     url = os.getenv("SUPABASE_DB_URL") or os.getenv("DATABASE_URL") or os.getenv("POSTGRES_URL")
     if not url:
         raise RuntimeError("SUPABASE_DB_URL is required in backend/.env")
@@ -230,7 +230,7 @@ class TableQuery:
         return " limit %s"
 
     def _execute(self, sql: str, params: list[Any]) -> list[dict[str, Any]]:
-        with psycopg.connect(_database_url(), row_factory=dict_row) as connection:
+        with psycopg.connect(get_database_url(), row_factory=dict_row) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(sql, params)
                 rows = cursor.fetchall()

@@ -23,14 +23,17 @@ const titles: Record<string, string> = {
   "/knowledge-base/items": "Products & Services",
   "/knowledge-base/instructions": "AI Instructions",
   "/leads": "Leads",
-  "/settings": "Settings"
+  "/settings": "Settings",
+  "/settings/whatsapp": "WhatsApp Connection"
 };
 
 type TopBarProps = {
   userEmail?: string | null;
+  whatsappConnected?: boolean;
+  whatsappLoading?: boolean;
 };
 
-export function TopBar({ userEmail }: TopBarProps) {
+export function TopBar({ userEmail, whatsappConnected, whatsappLoading }: TopBarProps) {
   const pathname = usePathname();
   const title = titles[pathname] ?? "Dashboard";
   const displayEmail = userEmail ?? "Signed in";
@@ -39,7 +42,7 @@ export function TopBar({ userEmail }: TopBarProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-sidebar-border bg-[#0a0a0a] px-4 md:px-6">
       <div className="flex items-center gap-3">
-        <MobileSidebar userEmail={userEmail} />
+        <MobileSidebar userEmail={userEmail} whatsappConnected={whatsappConnected} whatsappLoading={whatsappLoading} />
         <h1 className="text-lg font-semibold text-white">{title}</h1>
       </div>
       <div className="flex items-center gap-2">
